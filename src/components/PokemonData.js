@@ -11,27 +11,65 @@ import {
   Stack,
   Text,
 } from '@chakra-ui/react';
+import axios from 'axios';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 
-export default function PokemonData({ pokemon }) {
-  const [catched, setCatched] = useState(false);
-  console.log('pokemon', pokemon);
+export default function PokemonData({ pokemon, getPokes, catched }) {
+  const [catchedPoke, setCatchedPoke] = useState(catched);
+  //console.log('pokemon', pokemon);
 
   const baseStatsNames = {
-    hp: "Hp",
-    attack: "Attack",
-    defense: "Defense",
-    "special-attack": "special attack",
-    "special-defense": "special defense",
-    speed: "speed",
+    hp: 'Hp',
+    attack: 'Attack',
+    defense: 'Defense',
+    'special-attack': 'special attack',
+    'special-defense': 'special defense',
+    speed: 'speed',
+  };
+
+  const handleCatchToggle = async () => {
+    if (!catchedPoke) {
+      try {
+        const response = await axios.post('/api/catched', {
+          id: pokemon.id,
+          name: pokemon.name,
+        });
+        if (response.status === 200) {
+          setCatchedPoke(true);
+          getPokes();
+          console.log('¡Pokemon atrapado!');
+        } else {
+          console.error('Error al atrapar:', response.statusText);
+        }
+      } catch (error) {
+        console.error('Error al atrapar:', error.message);
+      }
+    } else {
+      try {
+        const response = await axios.delete(`/api/catched/${pokemon.id}`);
+        if (response.status === 200) {
+          setCatchedPoke(false);
+          getPokes();
+          console.log('¡Pokemon liberado!');
+        } else {
+          console.error('Error al liberar el Pokemon:', response.statusText);
+        }
+      } catch (error) {
+        console.error('Error al liberar el Pokemon:', error.message);
+      }
+    }
   };
 
   return (
     <Stack spacing="4" pb="4">
       <Stack spacing="2" position="relative">
         <Box position="absolute" right="0" zIndex="99">
-          <Checkbox>Catched</Checkbox>
+          <Flex alignItems="center" justifyContent="center">
+            <Checkbox isChecked={catchedPoke} onChange={handleCatchToggle}>
+              Catched
+            </Checkbox>
+          </Flex>
         </Box>
         <AspectRatio w="full" ratio={1}>
           <Image
@@ -44,21 +82,34 @@ export default function PokemonData({ pokemon }) {
         <Stack direction="row" spacing="5" style={{ justifyContent: 'center' }}>
           <Stack>
             <Text fontSize="sm">Weight</Text>
-            <Badge textAlign="center" size="md">{pokemon.weight/10} Kg </Badge>
+            <Badge textAlign="center" size="md">
+              {pokemon.weight / 10} Kg{' '}
+            </Badge>
           </Stack>
           <Stack>
             <Text fontSize="sm">Height</Text>
-            <Badge textAlign="center" size="md">{pokemon.height/10} m </Badge>
+            <Badge textAlign="center" size="md">
+              {pokemon.height / 10} m{' '}
+            </Badge>
           </Stack>
           <Stack>
             <Text fontSize="sm">Moves</Text>
-            <Badge textAlign="center" size="md">{pokemon.moves.length}</Badge>
+            <Badge textAlign="center" size="md">
+              {pokemon.moves.length}
+            </Badge>
           </Stack>
           <Stack>
             <Text fontSize="sm">Types</Text>
             <HStack>
               {pokemon.types.map((type) => (
-                <Badge style={{backgroundColor: getPokeTypeColor(type.type.name), color:'white'}} size="xs" key={type.slot}>
+                <Badge
+                  style={{
+                    backgroundColor: getPokeTypeColor(type.type.name),
+                    color: 'white',
+                  }}
+                  size="xs"
+                  key={type.slot}
+                >
                   {type.type.name}
                 </Badge>
               ))}

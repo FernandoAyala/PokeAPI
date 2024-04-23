@@ -27,10 +27,14 @@ const inter = Inter({ subsets: ['latin'] });
 
 export default function Home() {
   const pokemonDataModal = useDisclosure();
-
+  const capturedPokemonModal = useDisclosure();
+  const pokemonDataModalCatch = useDisclosure();
   const [isLoading, setIsLoading] = useState(false);
   const [pokemon, setPokemon] = useState([]);
+  const [catched, setCatched] = useState(false);
+  const [pokemonsCatch, setPokemonsCatch] = useState([]);
   const [selectedPokemon, setSelectedPokemon] = useState();
+  const [selectedPokemonCatch, setSelectedPokemonCatch] = useState();
   const [currentPage, setCurrentPage] = useState(
     'https://pokeapi.co/api/v2/pokemon/?limit=20&offset=0'
   );
@@ -48,25 +52,58 @@ export default function Home() {
   }, [currentPage]);
 
   function handleNextPage() {
-    // Parse the current page URL to get the offset
     const url = new URL(currentPage);
     const offset = parseInt(url.searchParams.get('offset')) || 0;
-    // Increase offset by 20 for the next page
     const nextOffset = offset + 20;
-    // Construct the URL for the next page
     const nextPageUrl = `https://pokeapi.co/api/v2/pokemon/?limit=20&offset=${nextOffset}`;
-    // Update the current page state
     setCurrentPage(nextPageUrl);
   }
 
   function handleViewPokemon(pokemon) {
     setSelectedPokemon(pokemon);
+    const foundPokemon = pokemonsCatch.find((poke) => poke.id === pokemon.id);
+    setCatched(foundPokemon ? true : false);
     pokemonDataModal.onOpen();
+  }
+
+  async function handleViewCapturedPokemon() {
+    capturedPokemonModal.onOpen();
+  }
+
+  function handleViewPokemonCatch(pokemon) {
+    setSelectedPokemonCatch(pokemon);
+    pokemonDataModalCatch.onOpen();
   }
 
   function scrollToTop() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
+
+  const getPokes = async () => {
+    try {
+      const res = await axios.get(`/api/catched`);
+      if (res.data) {
+        const pokemonsData = [];
+        for (const pokemon of res.data) {
+          try {
+            const response = await axios.get(
+              `https://pokeapi.co/api/v2/pokemon/${pokemon.id}`
+            );
+            pokemonsData.push(response.data);
+          } catch (error) {
+            console.error(`Error al obtener datos de ${pokemon.name}:`, error);
+          }
+        }
+        setPokemonsCatch(pokemonsData);
+      }
+    } catch (error) {
+      console.error('Error al obtener datos de los Pokémon:', error);
+    }
+  };
+
+  useEffect(() => {
+    getPokes();
+  }, []);
 
   return (
     <>
@@ -76,9 +113,12 @@ export default function Home() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <Flex alignItems="center" justifyContent='center'>
+      <Flex alignItems="center" justifyContent="center">
         <PokeballIconSmall />
-        <Text fontSize='6xl'>Pokédex</Text>
+        <Text fontSize="6xl">Pokédex</Text>
+      </Flex>
+      <Flex alignItems="center" justifyContent="center">
+      <Button isDisabled={pokemonsCatch.length === 0} onClick={handleViewCapturedPokemon}>View Captured Pokémon</Button>
       </Flex>
       <Flex alignItems="center" minH="100vh" justifyContent="center">
         <Container maxW="container.lg">
@@ -100,7 +140,7 @@ export default function Home() {
               ))}
             </SimpleGrid>
 
-            <Button isLoading={isLoading} onClick={handleNextPage}>
+            <Button isLoading={isLoading} onClick={() => handleNextPage()}>
               Load more
             </Button>
           </Stack>
@@ -118,7 +158,62 @@ export default function Home() {
           </ModalHeader>
           <ModalCloseButton />
           <ModalBody>
-            {selectedPokemon && <PokemonData pokemon={selectedPokemon} />}
+            {selectedPokemon && (
+              <PokemonData
+                pokemon={selectedPokemon}
+                getPokes={getPokes}
+                catched={catched}
+              />
+            )}
+          </ModalBody>
+        </ModalContent>
+      </Modal>
+      <Modal {...capturedPokemonModal}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Captured Pokémon</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <Stack spacing={4}>
+              <SimpleGrid spacing="2" columns={{ base: 2, md: 3 }}>
+                {pokemonsCatch.map((pokemon) => (
+                  <Box
+                    key={pokemon.id}
+                    as="button"
+                    onClick={() => handleViewPokemonCatch(pokemon)}
+                  >
+                    <motion.div
+                      whileHover={{ scale: 1.2 }}
+                      whileTap={{ scale: 0.8 }}
+                    >
+                      <PokemonCard pokemon={pokemon} />
+                    </motion.div>
+                  </Box>
+                ))}
+              </SimpleGrid>
+            </Stack>
+          </ModalBody>
+        </ModalContent>
+      </Modal>
+      <Modal {...pokemonDataModalCatch}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader
+            fontSize="30px"
+            textTransform="capitalize"
+            style={{ justifyContent: 'center', display: 'flex' }}
+          >
+            {selectedPokemonCatch?.name}
+          </ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            {selectedPokemonCatch && (
+              <PokemonData
+                pokemon={selectedPokemonCatch}
+                getPokes={getPokes}
+                catched={true}
+              />
+            )}
           </ModalBody>
         </ModalContent>
       </Modal>
