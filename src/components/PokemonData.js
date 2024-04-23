@@ -1,71 +1,92 @@
+import { getPokeTypeColor } from '@/utils/BackgroundTypes';
 import {
-  Box,
   AspectRatio,
-  Image,
-  Stack,
-  SimpleGrid,
-  Heading,
-  Tabs,
-  TabList,
-  TabPanels,
-  TabPanel,
-  Progress,
-  Text,
-  Tab,
   Badge,
-  HStack,
+  Box,
   Checkbox,
-} from "@chakra-ui/react";
-import axios from "axios";
-import { useEffect, useState } from "react";
+  Flex,
+  HStack,
+  Image,
+  Progress,
+  Stack,
+  Text,
+} from '@chakra-ui/react';
+import { motion } from 'framer-motion';
+import { useState } from 'react';
 
 export default function PokemonData({ pokemon }) {
   const [catched, setCatched] = useState(false);
+  console.log('pokemon', pokemon);
+
+  const baseStatsNames = {
+    hp: "Hp",
+    attack: "Attack",
+    defense: "Defense",
+    "special-attack": "special attack",
+    "special-defense": "special defense",
+    speed: "speed",
+  };
 
   return (
-    <Stack spacing="5" pb="5">
-      <Stack spacing="5" position="relative">
+    <Stack spacing="4" pb="4">
+      <Stack spacing="2" position="relative">
         <Box position="absolute" right="0" zIndex="99">
           <Checkbox>Catched</Checkbox>
         </Box>
         <AspectRatio w="full" ratio={1}>
           <Image
             objectFit="contain"
+            alt="Pokemon image"
             src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${pokemon.id}.png`}
           />
         </AspectRatio>
-        <Stack direction="row" spacing="5">
+
+        <Stack direction="row" spacing="5" style={{ justifyContent: 'center' }}>
           <Stack>
             <Text fontSize="sm">Weight</Text>
-            <Text>20</Text>
+            <Badge textAlign="center" size="md">{pokemon.weight/10} Kg </Badge>
           </Stack>
           <Stack>
             <Text fontSize="sm">Height</Text>
-            <Text>12</Text>
+            <Badge textAlign="center" size="md">{pokemon.height/10} m </Badge>
           </Stack>
           <Stack>
-            <Text fontSize="sm">Movimientos</Text>
-            <Text>109</Text>
+            <Text fontSize="sm">Moves</Text>
+            <Badge textAlign="center" size="md">{pokemon.moves.length}</Badge>
           </Stack>
           <Stack>
-            <Text fontSize="sm">Tipos</Text>
+            <Text fontSize="sm">Types</Text>
             <HStack>
-              <Badge>Agua</Badge>
-              <Badge>Agua</Badge>
+              {pokemon.types.map((type) => (
+                <Badge style={{backgroundColor: getPokeTypeColor(type.type.name), color:'white'}} size="xs" key={type.slot}>
+                  {type.type.name}
+                </Badge>
+              ))}
             </HStack>
           </Stack>
         </Stack>
       </Stack>
 
-      <Stack spacing="5" p="5" bg="gray.100" borderRadius="xl">
-        <Stack>
-          <Text fontSize="xs">hp</Text>
-          <Progress bg="gray.300" borderRadius="full" value={80} />
-        </Stack>
-        <Stack>
-          <Text fontSize="xs">attack</Text>
-          <Progress bg="gray.300" borderRadius="full" value={65} />
-        </Stack>
+      <Stack spacing="1" p="1" bg="gray.100" borderRadius="xl">
+        {pokemon.stats.map((type) => (
+          <Stack key={type.stat.name}>
+            <Text as="b" fontSize="xs" style={{ textTransform: 'uppercase' }}>
+              {baseStatsNames[type.stat.name]}
+            </Text>
+            <Flex align="center">
+              <motion.div initial={{ width: '0%' }} animate={{ width: `100%` }}>
+                <Progress
+                  bg="gray.300"
+                  borderRadius="full"
+                  value={type.base_stat}
+                />
+              </motion.div>
+              <Text ml="auto" fontSize="xs">
+                {type.base_stat}
+              </Text>
+            </Flex>
+          </Stack>
+        ))}
       </Stack>
     </Stack>
   );

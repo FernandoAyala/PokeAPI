@@ -1,28 +1,29 @@
-import Head from "next/head";
+import Head from 'next/head';
 
-import { Inter, Island_Moments } from "next/font/google";
-import styles from "@/styles/Home.module.css";
-import axios from "axios";
-const inter = Inter({ subsets: ["latin"] });
-import { useEffect, useState } from "react";
+import { PokeballIconSmall } from '@/assets/pokeball';
+import PokemonCard from '@/components/PokemonCard';
+import PokemonData from '@/components/PokemonData';
 import {
-  Container,
-  Stack,
-  Input,
-  Button,
-  SimpleGrid,
-  Flex,
   Box,
+  Button,
+  Container,
+  Flex,
   Modal,
-  ModalOverlay,
-  ModalHeader,
   ModalBody,
-  ModalContent,
   ModalCloseButton,
+  ModalContent,
+  ModalHeader,
+  ModalOverlay,
+  SimpleGrid,
+  Stack,
+  Text,
   useDisclosure,
-} from "@chakra-ui/react";
-import PokemonCard from "@/components/PokemonCard";
-import PokemonData from "@/components/PokemonData";
+} from '@chakra-ui/react';
+import axios from 'axios';
+import { motion } from 'framer-motion';
+import { Inter } from 'next/font/google';
+import { useEffect, useState } from 'react';
+const inter = Inter({ subsets: ['latin'] });
 
 export default function Home() {
   const pokemonDataModal = useDisclosure();
@@ -31,7 +32,7 @@ export default function Home() {
   const [pokemon, setPokemon] = useState([]);
   const [selectedPokemon, setSelectedPokemon] = useState();
   const [currentPage, setCurrentPage] = useState(
-    "https://pokeapi.co/api/v2/pokemon/?limit=20&offset=0"
+    'https://pokeapi.co/api/v2/pokemon/?limit=20&offset=0'
   );
 
   useEffect(() => {
@@ -46,11 +47,25 @@ export default function Home() {
     });
   }, [currentPage]);
 
-  function handleNextPage() {}
+  function handleNextPage() {
+    // Parse the current page URL to get the offset
+    const url = new URL(currentPage);
+    const offset = parseInt(url.searchParams.get('offset')) || 0;
+    // Increase offset by 20 for the next page
+    const nextOffset = offset + 20;
+    // Construct the URL for the next page
+    const nextPageUrl = `https://pokeapi.co/api/v2/pokemon/?limit=20&offset=${nextOffset}`;
+    // Update the current page state
+    setCurrentPage(nextPageUrl);
+  }
 
   function handleViewPokemon(pokemon) {
     setSelectedPokemon(pokemon);
     pokemonDataModal.onOpen();
+  }
+
+  function scrollToTop() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   return (
@@ -61,23 +76,32 @@ export default function Home() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
+      <Flex alignItems="center" justifyContent='center'>
+        <PokeballIconSmall />
+        <Text fontSize='6xl'>Pokédex</Text>
+      </Flex>
       <Flex alignItems="center" minH="100vh" justifyContent="center">
         <Container maxW="container.lg">
           <Stack p="5" alignItems="center" spacing="5">
             <SimpleGrid spacing="5" columns={{ base: 1, md: 5 }}>
               {pokemon.map((pokemon) => (
                 <Box
-                  as="button"
                   key={pokemon.id}
+                  as="button"
                   onClick={() => handleViewPokemon(pokemon)}
                 >
-                  <PokemonCard pokemon={pokemon} />
+                  <motion.div
+                    whileHover={{ scale: 1.2 }}
+                    whileTap={{ scale: 0.8 }}
+                  >
+                    <PokemonCard pokemon={pokemon} />
+                  </motion.div>
                 </Box>
               ))}
             </SimpleGrid>
 
-            <Button isLoading={false} onClick={handleNextPage}>
-              Cargas más
+            <Button isLoading={isLoading} onClick={handleNextPage}>
+              Load more
             </Button>
           </Stack>
         </Container>
@@ -85,7 +109,11 @@ export default function Home() {
       <Modal {...pokemonDataModal}>
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader textTransform="capitalize">
+          <ModalHeader
+            fontSize="30px"
+            textTransform="capitalize"
+            style={{ justifyContent: 'center', display: 'flex' }}
+          >
             {selectedPokemon?.name}
           </ModalHeader>
           <ModalCloseButton />
@@ -94,6 +122,21 @@ export default function Home() {
           </ModalBody>
         </ModalContent>
       </Modal>
+      <Box
+        position="fixed"
+        bottom="4"
+        right="4"
+        zIndex="999"
+        onClick={scrollToTop}
+      >
+        <Button
+          colorScheme="blue"
+          size="lg"
+          style={{ borderRadius: '70%', fontSize: '24px', fontWeight: 'bold' }}
+        >
+          ↑
+        </Button>
+      </Box>
     </>
   );
 }
