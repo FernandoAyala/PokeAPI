@@ -38,7 +38,7 @@ export default function PokemonData({ pokemon, getPokes, catched }) {
         if (response.status === 200) {
           setCatchedPoke(true);
           getPokes();
-          console.log('¡Pokemon atrapado!');
+          console.log('Pokemon atrapado');
         } else {
           console.error('Error al atrapar:', response.statusText);
         }
@@ -51,7 +51,7 @@ export default function PokemonData({ pokemon, getPokes, catched }) {
         if (response.status === 200) {
           setCatchedPoke(false);
           getPokes();
-          console.log('¡Pokemon liberado!');
+          console.log('Pokemon liberado');
         } else {
           console.error('Error al liberar el Pokemon:', response.statusText);
         }
@@ -71,14 +71,19 @@ export default function PokemonData({ pokemon, getPokes, catched }) {
             </Checkbox>
           </Flex>
         </Box>
-        <AspectRatio w="full" ratio={1}>
-          <Image
-            objectFit="contain"
-            alt="Pokemon image"
-            src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${pokemon.id}.png`}
-          />
-        </AspectRatio>
-
+        <motion.div
+          initial={{ scale: 0.5 }}
+          animate={{ scale: 1 }}
+          transition={{ duration: 0.2 }}
+        >
+          <AspectRatio w="full" ratio={1}>
+            <Image
+              objectFit="contain"
+              alt="Pokemon image"
+              src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${pokemon.id}.png`}
+            />
+          </AspectRatio>
+        </motion.div>
         <Stack direction="row" spacing="5" style={{ justifyContent: 'center' }}>
           <Stack>
             <Text fontSize="sm">Weight</Text>
@@ -129,7 +134,7 @@ export default function PokemonData({ pokemon, getPokes, catched }) {
                 <Progress
                   bg="gray.300"
                   borderRadius="full"
-                  value={type.base_stat}
+                  value={type.base_stat}                  
                 />
               </motion.div>
               <Text ml="auto" fontSize="xs">
